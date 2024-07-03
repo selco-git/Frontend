@@ -12,7 +12,7 @@ const CreateEmployee = () => {
   const [showToast, setShowToast] = useState(null);
   const [phonecheck, setPhonecheck] = useState(false);
   const [checkfield, setcheck] = useState(false)
-  const { t } = useTranslation();
+    const { t } = useTranslation();
   const history = useHistory();
   const isMobile = window.Digit.Utils.browser.isMobile();
 
@@ -90,7 +90,7 @@ const CreateEmployee = () => {
     }
     for (let i = 0; i < formData?.Jurisdictions?.length; i++) {
       let key = formData?.Jurisdictions[i];
-      if (!(key?.boundary && key?.boundaryType && key?.hierarchy && key?.tenantId && key?.roles?.length > 0)) {
+      if (!( key?.boundaryType && key?.hierarchy && key?.tenantId && key?.roles?.length > 0 && key?.boundary?.length>0)) {
         setcheck(false);
         break;
       } else {
@@ -130,7 +130,7 @@ const CreateEmployee = () => {
       setSubmitValve(false);
     }
   };
-
+  
   const navigateToAcknowledgement = (Employees) => {
     history.replace(`/${window?.contextPath}/employee/hrms/response`, { Employees, key: "CREATE", action: "CREATE" });
   }
@@ -139,7 +139,24 @@ const CreateEmployee = () => {
 
 
   const onSubmit = (data) => {
-    if (data.Jurisdictions.filter(juris => juris.tenantId == tenantId).length == 0) {
+   
+    let updatedJurisdictions=[];
+    data.Jurisdictions.forEach(jurisdiction=>{
+      let boundaryCodes=jurisdiction.boundary.map(item=>item.code);
+      boundaryCodes.forEach(code=>{
+        updatedJurisdictions.push({
+          hierarchy:jurisdiction.hierarchy,
+          boundaryType:jurisdiction.boundaryType,
+          boundary:code,
+          tenantId:code,
+          roles:jurisdiction.roles.map(role=>({
+            ...role,
+            tenantId:code
+          }))
+        })
+      })
+    })
+    if (updatedJurisdictions.filter(juris => juris.tenantId == tenantId).length == 0) {
       setShowToast({ key: true, label: "ERR_BASE_TENANT_MANDATORY" });
       return;
     }
@@ -154,13 +171,13 @@ const CreateEmployee = () => {
     }
     let roles = data?.Jurisdictions?.map((ele) => {
       return ele.roles?.map((item) => {
-        item["tenantId"] = ele.boundary;
+        item["tenantId"] = ele.boundary.code;
         return item;
       });
     });
-
-    const mappedroles = [].concat.apply([], roles);
-    let Employees = [
+    
+        const mappedroles = [].concat.apply([], roles);
+        let Employees = [
       {
         tenantId: tenantId,
         employeeStatus: "EMPLOYED",
@@ -168,7 +185,7 @@ const CreateEmployee = () => {
         code: data?.SelectEmployeeId?.code ? data?.SelectEmployeeId?.code : undefined,
         dateOfAppointment: new Date(data?.SelectDateofEmployment?.dateOfAppointment).getTime(),
         employeeType: data?.SelectEmployeeType?.code,
-        jurisdictions: data?.Jurisdictions,
+        jurisdictions: updatedJurisdictions,
         user: {
           mobileNumber: data?.SelectEmployeePhoneNumber?.mobileNumber,
           name: data?.SelectEmployeeName?.employeeName,

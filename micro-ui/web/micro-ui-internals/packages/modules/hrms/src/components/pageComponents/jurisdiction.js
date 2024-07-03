@@ -12,7 +12,7 @@ const makeDefaultValues = (sessionFormData) => {
         name: ele?.hierarchy,
       },
       boundaryType: { label: ele?.boundaryType, i18text:ele.boundaryType ?`EGOV_LOCATION_BOUNDARYTYPE_${ele.boundaryType?.toUpperCase()}`:null },
-      boundary: { code: ele?.boundary },
+      boundary: ele?.boundary,
       roles: ele?.roles,
     }
   })
@@ -33,7 +33,7 @@ const Jurisdictions = ({ t, config, onSelect, userType, formData }) => {
         key: 1,
         hierarchy: null,
         boundaryType: null,
-        boundary: null,
+        boundary: [],
         roles: [],
       },
     ])
@@ -45,8 +45,8 @@ const Jurisdictions = ({ t, config, onSelect, userType, formData }) => {
         id: jurisdiction?.id,
         hierarchy: jurisdiction?.hierarchy?.code,
         boundaryType: jurisdiction?.boundaryType?.label,
-        boundary: jurisdiction?.boundary?.code,
-        tenantId: jurisdiction?.boundary?.code,
+
+        //tenantId: tenantId,
         auditDetails: jurisdiction?.auditDetails,
       };
       res = cleanup(res);
@@ -54,6 +54,14 @@ const Jurisdictions = ({ t, config, onSelect, userType, formData }) => {
         res["roles"] = jurisdiction?.roles.map((ele) => {
           delete ele.description;
           return ele;
+        });
+      }
+      if(jurisdiction?.boundary){
+        res["boundary"] = jurisdiction?.boundary.map((ele) => {
+          return ele;
+        });
+        res["tenantId"] = jurisdiction?.boundary.map((ele) => {
+          return ele?.code;
         });
       }
       return res;
@@ -76,7 +84,7 @@ const Jurisdictions = ({ t, config, onSelect, userType, formData }) => {
         key: prev.length + 1,
         hierarchy: null,
         boundaryType: null,
-        boundary: null,
+        boundary: [],
         roles: [],
       },
     ]);
@@ -87,8 +95,8 @@ const Jurisdictions = ({ t, config, onSelect, userType, formData }) => {
         id: unit?.id,
         hierarchy: unit?.hierarchy?.code,
         boundaryType: unit?.boundaryType?.label,
-        boundary: unit?.boundary?.code,
-        tenantId: unit?.boundary?.code,
+        
+        //tenantId: tenantId,
         auditDetails: unit?.auditDetails,
         isdeleted: true,
         isActive: false,
@@ -98,6 +106,14 @@ const Jurisdictions = ({ t, config, onSelect, userType, formData }) => {
         res["roles"] = unit?.roles.map((ele) => {
           delete ele.description;
           return ele;
+        });
+      }
+      if (unit?.boundary) {
+        res["boundary"] = unit?.boundary.map((ele) => {
+          return ele;
+        });
+        res["tenantId"] = unit?.boundary.map((ele) => {
+          return ele?.code;
         });
       }
       setInactiveJurisdictions([...inactiveJurisdictions, res]);
@@ -117,7 +133,41 @@ const Jurisdictions = ({ t, config, onSelect, userType, formData }) => {
   }
 
   function getboundarydata() {
-    return [];
+    let users=Digit.ULBService.getCurrentTenantId()
+    let boundaryMenu=[];
+    if(formData?.SelectEmployeeCorrespondenceAddress?.block){ 
+      const formatterblock=`raichur.${formData?.SelectEmployeeCorrespondenceAddress?.block.name.toLowerCase()}`
+      const Menu=data?.MdmsRes?.tenant?.tenants.filter(city => city.code != "").filter(phc=>phc.city.blockCode===formatterblock).map(phc => { return { code:phc.code, name: phc?.name ? phc?.name : " " , labelKey: Digit.Utils.locale.getCityLocale(phc.code)} })
+      const isTenantPresent=Menu.some(city=>city.code===tenantId);
+      const updatedMenu=[
+        ...Menu,
+        {
+          code:"pg",
+          name:"All",
+          labelKey:"All"
+        }
+      ]
+      boundaryMenu=isTenantPresent? Menu:updatedMenu
+      return boundaryMenu.sort((a,b)=>a.name.localeCompare(b.name))
+    }
+    else if(formData?.SelectEmployeeCorrespondenceAddress?.district){
+      const Menu=data?.MdmsRes?.tenant?.tenants.filter(city => city.code != "").filter(phc=>phc.city.districtCode===formData?.SelectEmployeeCorrespondenceAddress?.district.key).map(phc => { return { code:phc.code, name: phc?.name ? phc?.name : " " , labelKey: Digit.Utils.locale.getCityLocale(phc.code)} })
+      const isTenantPresent=Menu.some(city=>city.code===tenantId);
+      
+      const updatedMenu=[
+        ...Menu,
+        {
+          code:"pg",
+          name:"All",
+          labelKey:"All"
+        }
+      ]
+      boundaryMenu=isTenantPresent? Menu:updatedMenu
+      return boundaryMenu.sort((a,b)=>a.name.localeCompare(b.name))
+    }else{
+      return data?.MdmsRes?.tenant.tenants.map(phc => { return { code: phc.code, name: phc?.name ? phc?.name : " " , labelKey: Digit.Utils.locale.getCityLocale(phc.code) } });
+    } 
+    
   }
 
   function getroledata() {
@@ -166,21 +216,25 @@ function Jurisdiction({
   handleRemoveUnit,
   hierarchylist,
   getroledata,
+  getboundarydata,
   roleoption,
   index,
 }) {
   const [BoundaryType, selectBoundaryType] = useState([]);
   const [Boundary, selectboundary] = useState([]);
   useEffect(() => {
-    selectBoundaryType(
+    const boundaryTypes=
       data?.MdmsRes?.["egov-location"]["TenantBoundary"]
         .filter((ele) => {
           return ele?.hierarchyType?.code == jurisdiction?.hierarchy?.code;
         })
         .map((item) => { return { ...item.boundary, i18text: Digit.Utils.locale.convertToLocale(item.boundary.label, 'EGOV_LOCATION_BOUNDARYTYPE') } })
-    );
+        selectBoundaryType(boundaryTypes)
+        if(boundaryTypes.length===1){
+          selectboundaryType(boundaryTypes[0])
+        }
   }, [jurisdiction?.hierarchy, data?.MdmsRes]);
-  const tenant = Digit.ULBService.getCurrentTenantId();
+    const tenant = Digit.ULBService.getCurrentTenantId();
   useEffect(() => {
     selectboundary(data?.MdmsRes?.tenant?.tenants.filter(city => city.code != "").map(city => { return { ...city, i18text: Digit.Utils.locale.getCityLocale(city.code) } }));
   }, [jurisdiction?.boundaryType, data?.MdmsRes]);
@@ -221,6 +275,15 @@ function Jurisdiction({
 
     setjurisdictions((pre) => pre.map((item) => (item.key === jurisdiction.key ? { ...item, roles: res } : item)));
   };
+  const selectPhcs = (e, data) => {
+    let res = [];
+    e && e?.map((ob) => {
+      res.push(ob?.[1]);
+    });
+
+    res?.forEach(resData => {resData.labelKey = resData.name})
+    setjurisdictions((pre) => pre.map((item) => (item.key === jurisdiction.key ? { ...item, boundary: res } : item)));
+  };
 
 
   const onRemove = (index, key) => {
@@ -228,6 +291,13 @@ function Jurisdiction({
       return i !== index;
     });
     setjurisdictions((pre) => pre.map((item) => (item.key === jurisdiction.key ? { ...item, roles: afterRemove } : item)));
+
+  };
+  const onRemoveBoundary = (index, key) => {
+    let afterRemove = jurisdiction?.boundary.filter((value, i) => {
+      return i !== index;
+    });
+    setjurisdictions((pre) => pre.map((item) => (item.key === jurisdiction.key ? { ...item, boundary: afterRemove } : item)));
 
   };
   return (
@@ -275,17 +345,25 @@ function Jurisdiction({
           />
         </LabelFieldPair>
         <LabelFieldPair>
-          <CardLabel className="card-label-smaller">{`${t("HR_BOUNDARY_LABEL")} * `}</CardLabel>
-          <Dropdown
-            className="form-field"
-            isMandatory={true}
-            selected={jurisdiction?.boundary}
-            disable={Boundary?.length === 0}
-            option={Boundary}
-            select={selectedboundary}
-            optionKey="i18text"
-            t={t}
-          />
+          <CardLabel className="card-label-smaller">{t("HR_BOUNDARY_LABEL")} *</CardLabel>
+          <div className="form-field">
+            <MultiSelectDropdown
+              className="form-field"
+              isMandatory={true}
+              defaultUnit="Selected"
+              selected={jurisdiction?.boundary}
+              options={getboundarydata(roleoption)}
+              onSelect={selectPhcs}
+              optionsKey="labelKey"
+              t={t}
+            />
+            <div className="tag-container">
+              {jurisdiction.boundary && jurisdiction?.boundary.length > 0 &&
+                jurisdiction?.boundary.map((value, index) => {
+                  return <RemoveableTag key={index} text={`${t(value["labelKey"]).slice(0, 22)} ...`} onClick={() => onRemoveBoundary(index, value)} />;
+                })}
+            </div>
+          </div>
         </LabelFieldPair>
 
         <LabelFieldPair>
