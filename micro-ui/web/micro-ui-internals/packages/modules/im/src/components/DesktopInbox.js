@@ -101,7 +101,8 @@ const DesktopInbox = ({
       {
         Header: t("WF_INBOX_HEADER_SLA_DAYS_REMAINING"),
         Cell: ({ row }) => {
-          return GetSlaCell(row.original["sla"]);
+          const a=0;
+          return GetSlaCell(row.original["sla"]===0 ? "0" : row.original["sla"]);
         },
       },
     ],

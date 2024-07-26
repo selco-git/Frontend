@@ -38,14 +38,12 @@ const GetSlaCell = (value) => {
   const getData = () => {
     console.log("originalmbl", data?.Employees)
     return data?.Employees?.map((original) => ({
-      [t("HR_EMP_NAME_LABEL")]: GetCell(original?.user?.name || ""),
-      [t("HR_EMP_TYPE")]:GetCell(original?.employeeType),
       [t("HR_EMP_ID_LABEL")]: original?.code,
-      [t("HR_MOB_NO_LABEL")]: original?.user?.mobileNumber,
+      [t("HR_EMP_NAME_LABEL")]: GetCell(original?.user?.name || ""),
       
       [t("HR_ROLE_NO_LABEL")]: GetCell(original?.user?.roles.length || ""),
-      //[t("HR_DESG_LABEL")]: GetCell(t("COMMON_MASTERS_DESIGNATION_" +original?.assignments?.sort((a, b) => new Date(a.fromDate) - new Date(b.fromDate))[0]?.designation)),
-      //[t("HR_DEPT_LABEL")]: GetCell(t(`COMMON_MASTERS_DEPARTMENT_${original?.assignments?.sort((a, b) => new Date(a.fromDate) - new Date(b.fromDate))[0]?.department}`)),
+      [t("HR_DESG_LABEL")]: GetCell(t("COMMON_MASTERS_DESIGNATION_" +original?.assignments?.sort((a, b) => new Date(a.fromDate) - new Date(b.fromDate))[0]?.designation)),
+      [t("HR_DEPT_LABEL")]: GetCell(t(`COMMON_MASTERS_DEPARTMENT_${original?.assignments?.sort((a, b) => new Date(a.fromDate) - new Date(b.fromDate))[0]?.department}`)),
       [t("HR_STATUS_LABEL")]: GetSlaCell(original?.isActive ? "ACTIVE" : "INACTIVE"),
     }));
   };

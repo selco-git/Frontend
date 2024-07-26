@@ -6,26 +6,7 @@ import { EmployeeModuleCard } from "@egovernments/digit-ui-react-components";
 
 const IMCard = () => {
   const { t } = useTranslation();
-  const [total, setTotal] = useState("-");
   
-  const { data, isLoading, isFetching, isSuccess } = Digit.Hooks.useNewInboxGeneral({
-    tenantId: Digit.ULBService.getCurrentTenantId(),
-    ModuleCode: "Incident",
-    filters: { limit: 10, offset: 0, services: ["Incident"] },
-    config: {
-      select: (data) => {
-        return {totalCount:data?.totalCount,nearingSlaCount:data?.nearingSlaCount} || "-";
-      },
-      enabled: Digit.Utils.pgrAccess(),
-    },
-      
-    
-  });
-  
-  useEffect(() => {
-    if (!isFetching && isSuccess) setTotal(data);
-  }, [isFetching]);
-
   const allLinks = [
     { text: t("ES_IM_INBOX"), link: "/digit-ui/employee/im/inbox" },
     { text: t("ES_IM_NEW_COMPLAINT"), link: "/digit-ui/employee/im/incident/create", accessTo: ["COMPLAINANT"] },
@@ -38,7 +19,7 @@ const IMCard = () => {
   const isCodePresent = (array, codeToCheck) =>{
     return array.some(item => item.code === codeToCheck);
   }
-  
+  const [total, setTotal] = useState("-");
   console.log("total", total)
   sessionStorage.setItem("inboxTotal", JSON.stringify(total?.totalCount));
   let tenantId = window.Digit.SessionStorage.get("Employee.tenantId");
@@ -83,12 +64,12 @@ console.log("propsForCSR",propsForCSR,Digit.Utils.didEmployeeHasRole("COMPLAINT"
     moduleName: t("ES_IM_INCIDENTS"),
     kpis: [
         {
-            count: isLoading ? "-" : total?.totalCount,
+            count: total,
             label: t("TOTAL_IM"),
             link: `/digit-ui/employee/im/inbox`
         },
         {
-            count: total?.nearingSlaCount,
+            
             label: t("TOTAL_NEARING_SLA"),
             link: `/digit-ui/employee/im/inbox`
         }
