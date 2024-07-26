@@ -4,17 +4,10 @@ import { useQuery, useQueryClient } from "react-query";
 import { filterFunctions } from "./newFilterFn";
 import { getSearchFields } from "./searchFields";
 import { InboxGeneral } from "../../services/elements/InboxService";
-import {PGRService} from "../../services/elements/PGR"
+
 
 const inboxConfig = (tenantId, filters) => ({
-  Incident: {
-    services: ["Incident"],
-    searchResponseKey: "IncidentWrappers",
-    businessIdsParamForSearch: "incidentId",
-    businessIdAliasForSearch: "incidentId",
-    fetchFilters: filterFunctions.Incident,
-    _searchFn: () => PGRService.search({ tenantId, filters }),
-  },
+  
 });
 
 const callMiddlewares = async (data, middlewares) => {
@@ -58,8 +51,8 @@ const useNewInboxGeneral = ({ tenantId, ModuleCode, filters, middleware = [], co
 
         if (data.items.length) {
           return data.items?.map((obj) => ({
-           
-            nearingSlaCount,
+            searchData: obj.businessObject,
+            workflowData: obj.ProcessInstance,
             statusMap,
             totalCount,
           }));
