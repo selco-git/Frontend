@@ -556,7 +556,7 @@ export const ComplaintDetails = (props) => {
       } 
       else {
         const caption = {
-          date: Digit.DateUtils.ConvertEpochToDate(complaintDetails.audit.details.createdTime),         
+          date: Digit.DateUtils.ConvertEpochToDate(complaintDetails.audit.details.lastModifiedTime),         
         };
         return <>
           {checkpoint?.wfComment ? <div>{checkpoint?.wfComment?.map( e => 
