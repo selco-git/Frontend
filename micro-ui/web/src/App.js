@@ -8,7 +8,7 @@ import {
 import {
   initIMComponents,
   IMReducers,
-} from "@egovernments/digit-ui-module-pgr";
+} from "@upyog/digit-ui-module-pgr";
 import { DigitUI } from "@egovernments/digit-ui-module-core";
 import { initDSSComponents } from "@egovernments/digit-ui-module-dss";
 import { initEngagementComponents } from "@egovernments/digit-ui-module-engagement";
